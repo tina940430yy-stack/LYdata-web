@@ -1,17 +1,22 @@
 
-(() => {
-  'use strict';
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#053f3b">
+  <meta name="description" content="瀧洋科技 CBCT 氣道服務潛在商機試算。兩個問題，初步了解既有影像設備的延伸應用可能。">
+  <title>診所沉睡的金礦｜瀧洋科技 CBCT 智慧醫療</title>
+  <link rel="icon" type="image/png" href="assets/logo-mark.png">
 
-  // 手機版初次進站：固定從首頁頂端開始
-  const isMobile = window.matchMedia('(max-width: 780px)').matches;
-
-  if (isMobile) {
+  <script>
+    // 避免 Safari 自動還原上次離開頁面時的捲動位置
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
 
-    // 移除殘留的頁面錨點，例如 #contact
-    if (location.hash) {
+    // 首次開啟時移除預約區的網址錨點
+    if (location.hash === '#contact') {
       history.replaceState(
         null,
         '',
@@ -19,269 +24,851 @@
       );
     }
 
-    // 初次進站停留在首頁，不影響使用者之後點擊導覽
-    let initialPositionFixed = false;
+    // 在載入 CSS 前先設定初始位置
+    document.documentElement.style.scrollBehavior = 'auto';
 
-    const resetInitialPosition = () => {
-      if (initialPositionFixed) return;
-      initialPositionFixed = true;
+    (function () {
+      let firstEntry = true;
 
-      document.documentElement.style.scrollBehavior = 'auto';
-      window.scrollTo(0, 0);
+      function goHome() {
+        if (!firstEntry) return;
 
-      requestAnimationFrame(() => {
         window.scrollTo(0, 0);
 
-        setTimeout(() => {
-          document.documentElement.style.scrollBehavior = 'auto';
+        requestAnimationFrame(function () {
           window.scrollTo(0, 0);
-        }, 100);
-
-        setTimeout(() => {
-          document.documentElement.style.removeProperty('scroll-behavior');
-        }, 200);
-      });
-    };
-
-    // 等待 Safari 完成頁面載入
-    if (document.readyState === 'complete') {
-      resetInitialPosition();
-    } else {
-      window.addEventListener('load', resetInitialPosition, {
-        once: true
-      });
-    }
-
-    // Safari 從快取恢復頁面時重新定位
-    window.addEventListener('pageshow', event => {
-      if (event.persisted) {
-        initialPositionFixed = false;
-        resetInitialPosition();
+        });
       }
-    });
-  }
 
-  const one = document.getElementById('stepOne');
-  const two = document.getElementById('stepTwo');
-  const result = document.getElementById('stepResult');
-
-  const resolution = document.getElementById('resolutionCheck');
-  const fov = document.getElementById('fovCheck');
-  const unsure = document.getElementById('unsureCheck');
-
-  const menuToggle = document.getElementById('menuToggle');
-  const primaryNav = document.getElementById('primaryNav');
-
-  let monthlyCases = 30;
-
-  const caseLabels = {
-    5: '不到 10 位（以約 5 位試算）',
-    15: '10–20 位（以約 15 位試算）',
-    30: '約 30 位',
-    45: '40–50 位（以約 45 位試算）',
-    60: '超過 50 位（以約 60 位試算）'
-  };
-
-  const fmt = n => Math.round(n).toLocaleString('en-US');
-
-  function updateChoiceStyles() {
-    document.querySelectorAll('.choice').forEach(label => {
-      const input = label.querySelector('input');
-      label.classList.toggle('selected', !!input.checked);
-    });
-
-    document.querySelectorAll('.spec-choice').forEach(label => {
-      const input = label.querySelector('input');
-      label.classList.toggle('checked', !!input.checked);
-    });
-
-    const unsureChoice = document.getElementById('unsureChoice');
-    if (unsureChoice) {
-      unsureChoice.classList.toggle('checked', unsure.checked);
-    }
-  }
-
-  function setProgress(step) {
-    document.querySelectorAll('[data-progress]').forEach(el => {
-      const n = Number(el.dataset.progress);
-
-      el.classList.toggle('active', n === step);
-      el.classList.toggle('done', n < step);
-
-      const icon = el.querySelector('i');
-      if (icon) {
-        icon.textContent = n < step
-          ? '✓'
-          : (n === 3 ? '✓' : String(n));
+      if (document.readyState === 'complete') {
+        goHome();
+      } else {
+        window.addEventListener('load', goHome, { once: true });
       }
-    });
-  }
 
-  function showStep(step, scroll = false) {
-    one.classList.toggle('hidden', step !== 1);
-    two.classList.toggle('hidden', step !== 2);
-    result.classList.toggle('hidden', step !== 3);
-
-    setProgress(step);
-
-    if (scroll) {
-      document.getElementById('wizardCard').scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
+      window.addEventListener('pageshow', function (event) {
+        if (event.persisted && firstEntry) {
+          goHome();
+        }
       });
-    }
-  }
 
-  // 第一題：每月病例數
-  one.addEventListener('change', event => {
-    if (event.target.name === 'cases') {
-      monthlyCases = Number(event.target.value);
-      updateChoiceStyles();
-    }
-  });
+      // 使用者開始操作後，不再強制捲回首頁
+      window.addEventListener('scroll', function () {
+        if (window.scrollY > 20) {
+          firstEntry = false;
+        }
+      }, { passive: true, once: true });
+    })();
+  </script>
 
-  one.addEventListener('submit', event => {
-    event.preventDefault();
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-    const selected = one.querySelector(
-      'input[name="cases"]:checked'
-    );
+<body>
+  <div class="announcement">
+    <span class="announcement-dot"></span>
+    <span>讓既有 CBCT 影像，延伸更多臨床與經營價值</span>
+    <a href="#calculator">免費試算 <span aria-hidden="true">↗</span></a>
+  </div>
 
-    if (!selected) return;
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="#top" aria-label="瀧洋科技首頁">
+        <img src="assets/logo-mark.png" alt="" class="brand-mark">
+        <span class="brand-copy">
+          <strong>瀧洋科技</strong>
+          <small>SMART IMAGING SOLUTIONS</small>
+        </span>
+      </a>
 
-    monthlyCases = Number(selected.value);
-    updateChoiceStyles();
-    showStep(2, true);
-  });
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="開啟導覽選單"
+        aria-expanded="false"
+        aria-controls="primaryNav"
+      >
+        <span></span><span></span>
+      </button>
 
-  // 第二題：設備規格
-  [resolution, fov].forEach(input => {
-    input.addEventListener('change', () => {
-      if (input.checked) unsure.checked = false;
-      updateChoiceStyles();
-    });
-  });
+      <nav class="primary-nav" id="primaryNav">
+        <a href="#how-it-works">如何試算</a>
+        <a href="#services">服務應用</a>
+        <a href="#about-platform">OPZ 雲端平台</a>
+        <a class="nav-cta" href="#contact">
+          預約專人評估 <span aria-hidden="true">↗</span>
+        </a>
+      </nav>
+    </div>
+  </header>
 
-  unsure.addEventListener('change', () => {
-    if (unsure.checked) {
-      resolution.checked = false;
-      fov.checked = false;
-    }
+  <main id="top">
 
-    updateChoiceStyles();
-  });
+    <!-- 首頁主視覺 -->
+    <section class="hero section-shell">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <span class="eyebrow-line"></span>
+          診所沉睡的金礦 · CBCT 延伸應用
+        </p>
 
-  document.getElementById('backToOne')
-    .addEventListener('click', () => showStep(1, true));
+        <h1>
+          您的 CBCT 每個月，<br>
+          正在錯過多少<span class="mint-text">「氣道自費」</span>服務機會？
+        </h1>
 
-  two.addEventListener('submit', event => {
-    event.preventDefault();
-    renderResult();
-    showStep(3, true);
-  });
+        <p class="hero-lede">
+          既有設備不只能拍攝影像。透過更完整的影像應用與雲端服務，探索診所現有資源的延伸可能。
+        </p>
 
-  document.getElementById('restartCalc')
-    .addEventListener('click', () => showStep(1, true));
+        <div class="hero-actions">
+          <a href="#calculator" class="button button-primary">
+            立即開始試算 <span aria-hidden="true">→</span>
+          </a>
+          <a href="#how-it-works" class="text-link">
+            先了解運作方式 <span aria-hidden="true">↓</span>
+          </a>
+        </div>
 
-  // 計算每月潛在服務商機
-  function renderResult() {
-    // 示意假設：病例量的 50% 作為可能進一步評估的人數
-    // 此假設不是經驗證的臨床需求比例
-    const estimatedCandidates = Math.round(monthlyCases * 0.5);
-    const exactValue = estimatedCandidates * 12000;
+        <div class="hero-proof">
+          <div class="proof-item">
+            <span class="proof-icon">02</span>
+            <span>
+              <strong>兩個問題</strong>
+              <small>快速了解現況</small>
+            </span>
+          </div>
 
-    document.getElementById('resultAmount').innerHTML =
-      `${fmt(exactValue)}<small> 元</small>`;
+          <div class="proof-divider"></div>
 
-    document.getElementById('resultRoundedNote').textContent =
-      `約 ${(exactValue / 10000).toLocaleString('zh-TW')} 萬元／月`;
+          <div class="proof-item">
+            <span class="proof-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5"></circle>
+                <path d="M12 7v5l3 2"></path>
+              </svg>
+            </span>
+            <span>
+              <strong>約 2 分鐘</strong>
+              <small>完成初步試算</small>
+            </span>
+          </div>
 
-    document.getElementById('summaryCases').textContent =
-      caseLabels[monthlyCases] || `約 ${monthlyCases} 位`;
+          <div class="proof-divider"></div>
 
-    let specText;
+          <div class="proof-item">
+            <span class="proof-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 20 6v5.5c0 4.7-3.2 7.8-8 9.5-4.8-1.7-8-4.8-8-9.5V6l8-3Z"></path>
+                <path d="m8.5 12 2.3 2.2 4.7-5"></path>
+              </svg>
+            </span>
+            <span>
+              <strong>初步評估</strong>
+              <small>非保證營收承諾</small>
+            </span>
+          </div>
+        </div>
+      </div>
 
-    if (unsure.checked) {
-      specText = '待專人協助確認';
-    } else if (resolution.checked && fov.checked) {
-      specText = '已勾選符合示意規格';
-    } else if (resolution.checked || fov.checked) {
-      specText = '部分規格已勾選，需確認';
-    } else {
-      specText = '尚未確認規格';
-    }
+      <!-- 原本的科技風格 CBCT 示意插圖，維持不變 -->
+      <div class="hero-visual" aria-label="CBCT 影像應用示意圖">
+        <div class="visual-glow"></div>
 
-    document.getElementById('summarySpecs').textContent = specText;
+        <div class="visual-caption caption-top">
+          <span class="live-dot"></span>
+          CBCT · AIRWAY VIEW
+        </div>
 
-    document.getElementById('monthlyCasesResult').textContent =
-      `約 ${fmt(monthlyCases)} 位`;
+        <div class="scan-screen">
+          <div class="screen-top">
+            <span>IMAGING WORKSPACE</span>
+            <div><i></i><i></i><i></i></div>
+          </div>
 
-    document.getElementById('estimatedCandidates').textContent =
-      `約 ${fmt(estimatedCandidates)} 位`;
+          <div class="scan-sidebar">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
 
-    document.getElementById('exactAmount').textContent =
-      `NT$ ${fmt(exactValue)}`;
-  }
+          <svg
+            class="skull-illustration"
+            viewBox="0 0 420 320"
+            role="img"
+            aria-label="頭頸部側面影像與氣道區域示意"
+          >
+            <defs>
+              <linearGradient id="boneFill" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#d4e6ec" stop-opacity=".72"/>
+                <stop offset="1" stop-color="#7fa2ae" stop-opacity=".2"/>
+              </linearGradient>
 
-  // 手機導覽選單
-  menuToggle.addEventListener('click', () => {
-    const open = primaryNav.classList.toggle('open');
+              <linearGradient id="airwayFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#a2f6dc" stop-opacity=".85"/>
+                <stop offset="1" stop-color="#42c6a3" stop-opacity=".16"/>
+              </linearGradient>
 
-    menuToggle.setAttribute('aria-expanded', String(open));
-    menuToggle.setAttribute(
-      'aria-label',
-      open ? '關閉導覽選單' : '開啟導覽選單'
-    );
-  });
+              <filter id="softGlow">
+                <feGaussianBlur stdDeviation="5"/>
+              </filter>
+            </defs>
 
-  primaryNav.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      primaryNav.classList.remove('open');
-      menuToggle.setAttribute('aria-expanded', 'false');
-    });
-  });
+            <g opacity=".2" stroke="#b7dae3" stroke-width=".8">
+              <path d="M15 40H400M15 80H400M15 120H400M15 160H400M15 200H400M15 240H400M15 280H400"/>
+              <path d="M50 15V305M100 15V305M150 15V305M200 15V305M250 15V305M300 15V305M350 15V305"/>
+            </g>
 
-  // 將試算資訊帶入諮詢備註
-  document.getElementById('resultContact')
-    .addEventListener('click', () => {
-      const notes = document.querySelector(
-        '#contactForm textarea[name="notes"]'
-      );
+            <path
+              d="M127 36c-30 8-46 31-47 61-1 18 6 31 19 44l-13 17 10 12-2 18 17 17 5 23c3 16 14 31 32 40l-4 27 37 0 13-36c23-7 42-22 52-42l20-18 20-8-5-12-27-7-14-22 8-17 13-13 4-18-10-5 8-16c12-24 7-49-13-65-29-23-81-13-100 0Z"
+              fill="url(#boneFill)"
+              stroke="#c8e5eb"
+              stroke-width="2"
+            />
 
-      if (!notes.value.trim()) {
-        const spec = unsure.checked
-          ? 'CBCT 規格需專人協助確認'
-          : `CBCT 已確認規格：解析度${resolution.checked ? '已勾選' : '未勾選'}、FOV${fov.checked ? '已勾選' : '未勾選'}`;
+            <path
+              d="M154 58c17-10 44-7 59 7 10 9 15 22 12 35l-7 16 17 12-7 14-20 2-7 16-18 8-6 20-21-3-4-20-13-9-3-25-17-8-8-16 6-19Z"
+              fill="#091d2a"
+              stroke="#bdd6dd"
+              stroke-width="1.5"
+            />
 
-        notes.value =
-          `希望進一步了解氣道相關服務與 OPZ 雲端平台。` +
-          `每月植牙／矯正病例：${caseLabels[monthlyCases]}；` +
-          `中間值情境估算可能進一步評估約 ${Math.round(monthlyCases * 0.5)} 位。` +
-          `${spec}。`;
-      }
-    });
+            <path
+              d="M120 160c13 3 23 13 25 26l10 31 26 18 15 24-8 20-25 0-13-31-18-22-9-33-12-13Z"
+              fill="#a5bbc5"
+              fill-opacity=".38"
+              stroke="#d3e4e9"
+              stroke-width="1.5"
+            />
 
-  // 聯絡表單
-  const contactForm = document.getElementById('contactForm');
+            <path
+              d="M171 101c-3 20 2 33 10 43 8 11 8 25 4 40-6 21 7 37 15 45 8 8 10 23 7 39l-9 21 20 1 13-19c11-22 9-44 3-59-6-16-8-26-1-39l8-15-10-13-18-8-6-20Z"
+              fill="url(#airwayFill)"
+              stroke="#72e5c4"
+              stroke-width="1.7"
+            />
 
-  contactForm.addEventListener('submit', event => {
-    event.preventDefault();
+            <path
+              d="M170 100c-5 22 0 38 11 52 8 11 9 24 4 41-5 18 4 33 13 44"
+              fill="none"
+              stroke="#9af4dc"
+              stroke-width="12"
+              opacity=".2"
+              filter="url(#softGlow)"
+            />
 
-    if (!contactForm.reportValidity()) return;
+            <path
+              d="M96 95 55 76M102 165 48 165M178 263 140 290"
+              fill="none"
+              stroke="#81e9ca"
+              stroke-width="1.4"
+            />
 
-    const success = document.getElementById('formSuccess');
-    success.classList.remove('hidden');
+            <circle cx="55" cy="76" r="3" fill="#81e9ca"/>
+            <circle cx="48" cy="165" r="3" fill="#81e9ca"/>
+            <circle cx="140" cy="290" r="3" fill="#81e9ca"/>
 
-    success.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest'
-    });
-  });
+            <g fill="#b3d9e3" font-size="10" font-family="monospace">
+              <text x="18" y="67">AIRWAY REGION</text>
+              <text x="17" y="155">SAGITTAL VIEW</text>
+              <text x="112" y="307">CERVICAL SPINE</text>
+            </g>
 
-  // 頁尾年份與初始試算狀態
-  document.getElementById('currentYear').textContent =
-    new Date().getFullYear();
+            <g stroke="#91efd3" stroke-width="1.2" fill="none">
+              <path d="M282 65h90v30h-90z" opacity=".45"/>
+              <path d="M290 76h52M290 84h38"/>
+              <path d="M280 230h95v39h-95z" opacity=".45"/>
+              <path d="M291 242h68M291 251h49"/>
+            </g>
 
-  updateChoiceStyles();
-  showStep(1, false);
-})();
+            <g fill="#a5f2db" font-size="9" font-family="monospace">
+              <text x="288" y="59">VOXEL 0.8 mm</text>
+              <text x="290" y="222">FOV 10 × 10</text>
+            </g>
+          </svg>
+
+          <div class="screen-footer">
+            <span><b></b> IMAGE LOADED</span>
+            <span>3D / MPR <strong>+</strong></span>
+          </div>
+        </div>
+
+        <div class="floating-chip chip-a">
+          <span class="chip-icon">⌁</span>
+          <span>
+            <strong>既有設備</strong>
+            <small>探索延伸應用</small>
+          </span>
+        </div>
+
+        <div class="floating-chip chip-b">
+          <span class="chip-pulse"></span>
+          <span>
+            <strong>OPZ 雲端平台</strong>
+            <small>影像分析與整合</small>
+          </span>
+        </div>
+
+        <p class="visual-caption caption-bottom">
+          影像為介面示意，非實際病患資料
+        </p>
+      </div>
+    </section>
+
+    <section class="trust-strip" aria-label="試算特色">
+      <div class="trust-inner">
+        <span>從既有資源出發</span>
+        <span class="trust-sep">✳</span>
+        <span>不必先更換設備</span>
+        <span class="trust-sep">✳</span>
+        <span>先評估，再決定下一步</span>
+        <span class="trust-sep">✳</span>
+        <span>重視影像規格與專業判斷</span>
+      </div>
+    </section>
+
+    <section class="section section-steps" id="how-it-works">
+      <div class="section-heading centered">
+        <p class="eyebrow">
+          <span class="eyebrow-line"></span>
+          SIMPLE · CLEAR · PRACTICAL
+        </p>
+        <h2>兩個問題，<span class="mint-text">看見一個新方向。</span></h2>
+        <p>不需要先準備複雜報表，先從每月病例量與現有影像設備條件開始。</p>
+      </div>
+
+      <div class="steps-grid">
+        <article class="step-card">
+          <span class="step-number">01</span>
+          <div class="step-icon icon-people">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="19" cy="15" r="7"/>
+              <path d="M5 38v-4c0-7 6-11 14-11s14 4 14 11v4M35 10a6 6 0 0 1 0 12M37 26c4 1 7 4 7 9v3"/>
+            </svg>
+          </div>
+          <h3>了解每月病例量</h3>
+          <p>以植牙／矯正病例作為起點，建立初步評估的情境。</p>
+        </article>
+
+        <article class="step-card">
+          <span class="step-number">02</span>
+          <div class="step-icon icon-cube">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="m24 4 17 9.5v21L24 44 7 34.5v-21Z"/>
+              <path d="m7 13.5 17 10 17-10M24 23.5V44"/>
+            </svg>
+          </div>
+          <h3>確認 CBCT 規格</h3>
+          <p>初步核對影像解析度與拍攝範圍，不確定也可交由專人協助。</p>
+        </article>
+
+        <article class="step-card">
+          <span class="step-number">03</span>
+          <div class="step-icon icon-chart">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M5 42h39M10 36V25h8v11M22 36V17h8v19M34 36V7h8v29M8 18l11-8 8 4L41 3"/>
+            </svg>
+          </div>
+          <h3>查看潛在商機</h3>
+          <p>依透明列出的示意假設計算，作為進一步討論的參考。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 互動試算區 -->
+    <section class="calculator-section" id="calculator">
+      <div class="calculator-shell">
+        <div class="calculator-intro">
+          <p class="eyebrow eyebrow-light">
+            <span class="eyebrow-line"></span>
+            OPPORTUNITY CALCULATOR
+          </p>
+          <h2>你的診所，<br>還有多少<span>延伸可能？</span></h2>
+          <p>完成兩個簡單問題，試算既有病例量可能對應的年服務商機。</p>
+
+          <div class="mini-note">
+            <span class="mini-note-icon">i</span>
+            <span>這是情境估算工具，並非營收承諾。實際服務條件、適用性與費用，須經專業評估確認。</span>
+          </div>
+
+          <div class="calc-ornament" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="wizard-card" id="wizardCard">
+          <div class="wizard-head">
+            <div class="wizard-brand">
+              <img src="assets/logo-mark.png" alt="">
+              <strong>瀧洋科技</strong>
+            </div>
+            <span class="wizard-tag">免費初步試算</span>
+          </div>
+
+          <div class="progress-row" aria-label="試算進度">
+            <span class="progress-step active" data-progress="1">
+              <i>1</i><b>病例量</b>
+            </span>
+            <span class="progress-line"></span>
+            <span class="progress-step" data-progress="2">
+              <i>2</i><b>設備規格</b>
+            </span>
+            <span class="progress-line"></span>
+            <span class="progress-step" data-progress="3">
+              <i>✓</i><b>試算結果</b>
+            </span>
+          </div>
+
+          <form id="stepOne" class="wizard-step" novalidate>
+            <p class="question-index">問題 1 / 2</p>
+            <h3>您的診所每月約有幾位<br class="desktop-break">植牙／矯正病患？</h3>
+            <p class="question-help">選擇最接近的數量即可，我們會以區間代表值進行示意試算。</p>
+
+            <div class="case-options" role="radiogroup" aria-label="每月植牙或矯正病例數">
+              <label class="choice">
+                <input type="radio" name="cases" value="5">
+                <span class="fake-radio"></span>
+                <span>不到 10 位</span>
+                <small>約 5 位</small>
+              </label>
+
+              <label class="choice">
+                <input type="radio" name="cases" value="15">
+                <span class="fake-radio"></span>
+                <span>10–20 位</span>
+                <small>約 15 位</small>
+              </label>
+
+              <label class="choice selected">
+                <input type="radio" name="cases" value="30" checked>
+                <span class="fake-radio"></span>
+                <span>約 30 位</span>
+                <small>示例情境</small>
+              </label>
+
+              <label class="choice">
+                <input type="radio" name="cases" value="45">
+                <span class="fake-radio"></span>
+                <span>40–50 位</span>
+                <small>約 45 位</small>
+              </label>
+
+              <label class="choice">
+                <input type="radio" name="cases" value="60">
+                <span class="fake-radio"></span>
+                <span>超過 50 位</span>
+                <small>約 60 位</small>
+              </label>
+            </div>
+
+            <button class="button button-dark button-full" type="submit">
+              下一步 <span aria-hidden="true">→</span>
+            </button>
+
+            <p class="form-footnote">
+              <span class="tiny-lock">◇</span>
+              資料僅用於本次前端試算，不會在此頁送出。
+            </p>
+          </form>
+
+          <form id="stepTwo" class="wizard-step hidden" novalidate>
+            <p class="question-index">問題 2 / 2</p>
+            <h3>您的 CBCT 設備是否符合<br class="desktop-break">以下影像規格？</h3>
+            <p class="question-help">請依設備資料初步確認；不確定也沒關係，可請專人協助評估。</p>
+
+            <div class="spec-options">
+              <label class="spec-choice" id="resolutionChoice">
+                <input id="resolutionCheck" type="checkbox" checked>
+                <span class="spec-icon">
+                  <svg viewBox="0 0 40 40" aria-hidden="true">
+                    <path d="m20 3 15 8.5v17L20 37 5 28.5v-17Z"/>
+                    <path d="m5 11.5 15 9 15-9M20 20.5V37"/>
+                  </svg>
+                </span>
+                <span class="spec-copy">
+                  <strong>影像解析度</strong>
+                  <small>0.8 mm 或更佳（建議）</small>
+                </span>
+                <span class="spec-check">✓</span>
+              </label>
+
+              <label class="spec-choice" id="fovChoice">
+                <input id="fovCheck" type="checkbox" checked>
+                <span class="spec-icon">
+                  <svg viewBox="0 0 40 40" aria-hidden="true">
+                    <path d="M14 4H5v9M26 4h9v9M5 27v9h9M35 27v9h-9"/>
+                    <circle cx="20" cy="20" r="8"/>
+                    <circle cx="20" cy="20" r="2"/>
+                  </svg>
+                </span>
+                <span class="spec-copy">
+                  <strong>拍攝範圍（FOV）</strong>
+                  <small>至少 10 × 10 cm（示意）</small>
+                </span>
+                <span class="spec-check">✓</span>
+              </label>
+
+              <label class="unsure-choice" id="unsureChoice">
+                <input id="unsureCheck" type="checkbox">
+                <span class="fake-radio"></span>
+                <span>不確定，想請專人協助評估</span>
+              </label>
+            </div>
+
+            <div class="wizard-actions">
+              <button class="button button-ghost" id="backToOne" type="button">← 上一步</button>
+              <button class="button button-dark" type="submit">立即看試算結果 <span aria-hidden="true">→</span></button>
+            </div>
+
+            <p class="form-footnote">
+              <span class="tiny-lock">◇</span>
+              規格僅為初步參考，實際相容性以專業確認為準。
+            </p>
+          </form>
+
+          <section id="stepResult" class="wizard-step hidden" aria-live="polite">
+            <div class="result-topline">
+              <p class="question-index">試算結果</p>
+              <button id="restartCalc" class="restart-button" type="button">↻ 重新試算</button>
+            </div>
+
+            <h3>從既有病例量，<br>看見服務延伸的可能。</h3>
+            <p class="question-help">依照您輸入的病例量，以中間值情境估算每月可能進一步評估的對象與服務商機。</p>
+
+            <div class="result-amount">
+              <span>每月潛在服務商機（示意）</span>
+              <strong id="resultAmount">90,000<small> 元</small></strong>
+              <em id="resultRoundedNote">約 9 萬元／月</em>
+            </div>
+
+            <div class="result-summary">
+              <div class="summary-item">
+                <span class="summary-icon">♧</span>
+                <span>
+                  <small>每月病例量</small>
+                  <strong id="summaryCases">約 30 位</strong>
+                </span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-icon">◇</span>
+                <span>
+                  <small>設備規格狀態</small>
+                  <strong id="summarySpecs">已勾選符合示意規格</strong>
+                </span>
+              </div>
+            </div>
+
+            <div class="assumption-box">
+              <div class="assumption-title">
+                <strong>試算假設（示意）</strong>
+                <span>以病例量中間值估算</span>
+              </div>
+              <div class="assumption-row">
+                <span>每月植牙／矯正病例</span>
+                <strong id="monthlyCasesResult">約 30 位</strong>
+              </div>
+              <div class="assumption-row">
+                <span>預估可進一步評估人數</span>
+                <strong id="estimatedCandidates">約 15 位</strong>
+              </div>
+              <div class="assumption-row">
+                <span>假設單次服務金額</span>
+                <strong>NT$ 12,000</strong>
+              </div>
+              <div class="assumption-row assumption-total">
+                <span>每月潛在服務商機</span>
+                <strong id="exactAmount">NT$ 180,000</strong>
+              </div>
+            </div>
+
+            <p class="disclaimer">
+              本試算以病例量約一半作為中間值情境，僅供商業討論示意，並非經驗證的臨床需求比例、實際營收預測或保證。實際適用對象須依臨床判斷、設備相容性與服務內容確認。
+            </p>
+
+            <a href="#contact" class="button button-dark button-full" id="resultContact">
+              進一步了解服務 <span aria-hidden="true">→</span>
+            </a>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- 服務應用 -->
+    <section class="section service-section" id="services">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow">
+            <span class="eyebrow-line"></span>
+            MORE VALUE, LESS FRICTION
+          </p>
+          <h2>從現有設備出發，<br><span class="mint-text">延伸更多臨床與經營價值。</span></h2>
+        </div>
+        <p>瀧洋 OPZ 雲端平台，協助診所探索 CBCT 的更多應用可能；從影像到服務，逐步建立更清楚的評估流程。</p>
+      </div>
+
+      <div class="service-grid">
+        <article class="service-card">
+          <div class="service-card-top">
+            <span class="service-icon">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <path d="M11 8c-3-3-8-1-8 4 0 8 7 11 7 18 0 4 2 7 5 7 4 0 4-7 7-7s3 7 7 7c4 0 5-4 5-7 0-7 7-10 7-18 0-5-5-7-8-4-4 3-7 3-11 0-3-2-7-2-11 0Z"/>
+                <path d="M17 13c-2 3-2 5 0 7"/>
+              </svg>
+            </span>
+            <span class="card-index">01 / DEVICE</span>
+          </div>
+          <h3>善用現有設備</h3>
+          <p>盤點既有 CBCT 影像資源，評估是否具備延伸應用的條件。</p>
+          <div class="card-bottom">
+            <span>既有資源再發掘</span><span aria-hidden="true">↗</span>
+          </div>
+        </article>
+
+        <article class="service-card featured-service">
+          <div class="service-card-top">
+            <span class="service-icon">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <path d="M5 37h34M10 31v-9h7v9M22 31V13h7v18M34 31V6h5v25M7 15l10-7 8 4L38 2"/>
+                <path d="m31 2 7 0 0 7"/>
+              </svg>
+            </span>
+            <span class="card-index">02 / SERVICE</span>
+          </div>
+          <h3>延伸自費服務</h3>
+          <p>從植牙／矯正等既有服務出發，探索氣道相關評估的服務可能性。</p>
+          <div class="card-bottom">
+            <span>依專業評估規劃</span><span aria-hidden="true">↗</span>
+          </div>
+        </article>
+
+        <article class="service-card">
+          <div class="service-card-top">
+            <span class="service-icon">
+              <svg viewBox="0 0 44 44" aria-hidden="true">
+                <path d="M12 32h21a8 8 0 0 0 1-16 12 12 0 0 0-23-3 9.5 9.5 0 0 0 1 19Z"/>
+                <path d="M13 37h20M18 41h10"/>
+              </svg>
+            </span>
+            <span class="card-index">03 / PLATFORM</span>
+          </div>
+          <h3>雲端影像平台</h3>
+          <p>透過瀧洋 OPZ 雲端平台，協助影像處理與分析，整合至診所既有流程。</p>
+          <div class="card-bottom">
+            <span>評估合適的工作流程</span><span aria-hidden="true">↗</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- OPZ 雲端平台 -->
+    <section class="platform-section" id="about-platform">
+      <div class="platform-visual">
+        <div class="platform-window">
+          <div class="window-toolbar">
+            <div class="window-dots"><i></i><i></i><i></i></div>
+            <span>OPZ CLOUD WORKSPACE</span>
+            <span class="window-status">SECURE VIEW</span>
+          </div>
+
+          <div class="window-content">
+            <div class="window-side">
+              <span class="active"></span><span></span><span></span><span></span><span></span>
+            </div>
+
+            <div class="window-main">
+              <div class="window-title">
+                <span>影像工作區</span><small>示意介面</small>
+              </div>
+
+              <div class="scan-panels">
+                <div class="scan-panel">
+                  <div class="slice-lines"></div>
+                  <svg viewBox="0 0 140 175" aria-hidden="true">
+                    <path d="M58 8C27 13 19 34 22 55l10 18-5 15 15 12 1 18 24 30 15-12-3-18 12-17 8-24 13-17-4-24C101 20 80 4 58 8Z" fill="#90aab6" fill-opacity=".35" stroke="#c6dfe5" stroke-width="1.3"/>
+                    <path d="M52 40c-7 10-7 23 0 31l10 10c6 9 6 18 3 29l7 31 12-18-5-30-8-19 4-19-8-16Z" fill="#8cf1d3" fill-opacity=".7" stroke="#8cf1d3"/>
+                  </svg>
+                  <span>SAGITTAL</span>
+                </div>
+
+                <div class="scan-panel scan-panel-2">
+                  <div class="slice-lines"></div>
+                  <svg viewBox="0 0 140 175" aria-hidden="true">
+                    <ellipse cx="70" cy="83" rx="47" ry="65" fill="#8ea8b4" fill-opacity=".25" stroke="#c6dfe5" stroke-width="1.3"/>
+                    <path d="M42 64c10-18 31-21 43-8 10 12 6 22 0 29-8 10-8 22 0 31l-7 26-19-1-5-24c-14-11-19-32-12-53Z" fill="#9cebd4" fill-opacity=".65" stroke="#9cebd4"/>
+                  </svg>
+                  <span>3D / MPR</span>
+                </div>
+              </div>
+
+              <div class="window-metrics">
+                <div><small>影像狀態</small><strong><b></b> 待分析</strong></div>
+                <div><small>工作流程</small><strong>雲端協作</strong></div>
+                <div><small>影像管理</small><strong>整合檢視</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="platform-caption">
+          <span class="caption-line"></span>
+          <span>介面為概念示意，非實際軟體畫面</span>
+        </div>
+      </div>
+
+      <div class="platform-copy">
+        <p class="eyebrow eyebrow-light">
+          <span class="eyebrow-line"></span>
+          BEYOND THE SCAN
+        </p>
+        <h2>讓數位影像的價值，<br>不只停留在拍攝當下。</h2>
+        <p>我們從診所現有設備與工作流程出發，協助評估 CBCT 影像的延伸應用；讓技術、影像與服務需求有機會被更有系統地串連。</p>
+
+        <div class="platform-points">
+          <div>
+            <span class="point-check">✓</span>
+            <span>
+              <strong>先盤點條件</strong>
+              <small>從設備規格與現況開始，不預設每間診所都適用。</small>
+            </span>
+          </div>
+          <div>
+            <span class="point-check">✓</span>
+            <span>
+              <strong>再討論流程</strong>
+              <small>依診所需求，進一步了解影像處理與雲端協作方式。</small>
+            </span>
+          </div>
+          <div>
+            <span class="point-check">✓</span>
+            <span>
+              <strong>由專業人員評估</strong>
+              <small>不以自動試算取代臨床判斷、設備確認或專業建議。</small>
+            </span>
+          </div>
+        </div>
+
+        <a href="#contact" class="button button-mint">
+          預約專人諮詢 <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 預約諮詢 -->
+    <section class="contact-section" id="contact">
+      <div class="contact-shell">
+        <div class="contact-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-line"></span>
+            LET'S TALK
+          </p>
+
+          <h2>想進一步了解？<br><span class="mint-text">讓我們一起評估。</span></h2>
+          <p>留下聯絡資料，讓瀧洋團隊更了解您的設備與需求，再由專人協助討論適合的下一步。</p>
+
+          <div class="contact-note">
+            <span class="contact-note-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+              </svg>
+            </span>
+            <span>
+              <strong>重視資料安全</strong>
+              <small>正式上線前，需串接安全表單與隱私告知機制。</small>
+            </span>
+          </div>
+
+          <div class="contact-orbit" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="contact-form-card">
+          <form id="contactForm">
+            <div class="form-card-heading">
+              <h3>預約專人諮詢</h3>
+              <span><i></i> 將有專人與您聯繫</span>
+            </div>
+
+            <p class="required-note"><b>*</b> 為必填欄位</p>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>姓名 <b>*</b></span>
+                <input name="name" type="text" placeholder="請輸入姓名" autocomplete="name" required>
+              </label>
+
+              <label class="field">
+                <span>診所名稱 <b>*</b></span>
+                <input name="clinic" type="text" placeholder="請輸入診所名稱" autocomplete="organization" required>
+              </label>
+
+              <label class="field">
+                <span>聯絡電話 <b>*</b></span>
+                <input name="phone" type="tel" placeholder="請輸入手機或市話" autocomplete="tel" required>
+              </label>
+
+              <label class="field">
+                <span>電子郵件</span>
+                <input name="email" type="email" placeholder="請輸入電子郵件（選填）" autocomplete="email">
+              </label>
+
+              <label class="field field-wide">
+                <span>想了解的內容（選填）</span>
+                <textarea name="notes" rows="3" placeholder="例如：想確認 CBCT 規格、了解 OPZ 雲端平台……"></textarea>
+              </label>
+            </div>
+
+            <div class="form-consent">
+              <input id="consent" type="checkbox" required>
+              <label for="consent">我同意瀧洋團隊為本次諮詢目的使用上述聯絡資料。<b>*</b></label>
+            </div>
+
+            <button class="button button-dark button-full" type="submit">
+              送出諮詢需求 <span aria-hidden="true">→</span>
+            </button>
+
+            <p class="form-disclaimer">
+              目前為互動展示版，送出後只會顯示確認訊息，不會真的傳送或儲存個人資料。正式上線需串接後端與隱私政策。
+            </p>
+
+            <div id="formSuccess" class="form-success hidden" role="status">
+              <span>✓</span>
+              <div>
+                <strong>表單展示流程完成</strong>
+                <p>這是前端測試確認訊息，資料尚未傳送。正式上線前請串接安全表單或 CRM 系統。</p>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <a class="brand footer-brand" href="#top">
+        <img src="assets/logo-mark.png" alt="" class="brand-mark">
+        <span class="brand-copy">
+          <strong>瀧洋科技</strong>
+          <small>SMART IMAGING SOLUTIONS</small>
+        </span>
+      </a>
+
+      <p>以影像科技，探索更多服務可能。</p>
+      <a href="#top" class="back-top">回到頁首 ↑</a>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="official-logo-wrap">
+        <img src="assets/logo-full.png" alt="瀧洋康健數據鏈股份有限公司標誌">
+      </div>
+      <p>© <span id="currentYear">2026</span> 瀧洋科技｜本頁為服務概念與試算展示。</p>
+      <p class="footer-disclaimer">商機試算不構成醫療建議、獲利保證或設備相容性承諾。</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
